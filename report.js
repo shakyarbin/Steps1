@@ -5,6 +5,45 @@ class ReportPage {
         this.updateDate();
         this.updateActivityRings();
         this.loadActivityData();
+        this.initializeResetButton();
+    }
+
+    initializeResetButton() {
+        const resetBtn = document.querySelector('.reset-btn-report');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset all activity data? This cannot be undone.')) {
+                    // Clear all stored data
+                    localStorage.removeItem('stepCounterData');
+                    localStorage.removeItem('hourlyStepsData');
+                    localStorage.removeItem('activeTime');
+                    
+                    // Show feedback
+                    this.showFeedback('All activity data has been reset');
+                    
+                    // Reload the page to refresh all stats
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            });
+        }
+    }
+
+    showFeedback(message) {
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback-toast';
+        feedback.textContent = message;
+        document.body.appendChild(feedback);
+        
+        // Trigger animation
+        setTimeout(() => feedback.classList.add('show'), 10);
+        
+        // Remove after animation
+        setTimeout(() => {
+            feedback.classList.remove('show');
+            setTimeout(() => feedback.remove(), 300);
+        }, 2000);
     }
 
     updateDate() {
