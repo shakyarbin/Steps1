@@ -12,14 +12,15 @@ class ReportPage {
         const resetBtn = document.querySelector('.reset-btn-report');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
-                if (confirm('Are you sure you want to reset all activity data? This cannot be undone.')) {
+                if (confirm('Are you sure you want to reset all stats to zero? This cannot be undone.')) {
                     // Clear all stored data
                     localStorage.removeItem('stepCounterData');
                     localStorage.removeItem('hourlyStepsData');
                     localStorage.removeItem('activeTime');
+                    localStorage.removeItem('stepCounterState');
                     
                     // Show feedback
-                    this.showFeedback('All activity data has been reset');
+                    this.showFeedback('All stats have been reset to zero');
                     
                     // Reload the page to refresh all stats
                     setTimeout(() => {
@@ -36,12 +37,31 @@ class ReportPage {
         feedback.textContent = message;
         document.body.appendChild(feedback);
         
+        // Add styles dynamically
+        feedback.style.position = 'fixed';
+        feedback.style.bottom = '100px';
+        feedback.style.left = '50%';
+        feedback.style.transform = 'translateX(-50%) translateY(100px)';
+        feedback.style.backgroundColor = '#2c2c2e';
+        feedback.style.color = '#ffffff';
+        feedback.style.padding = '12px 24px';
+        feedback.style.borderRadius = '25px';
+        feedback.style.fontSize = '14px';
+        feedback.style.opacity = '0';
+        feedback.style.transition = 'all 0.3s ease';
+        feedback.style.zIndex = '2000';
+        feedback.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+        
         // Trigger animation
-        setTimeout(() => feedback.classList.add('show'), 10);
+        setTimeout(() => {
+            feedback.style.opacity = '1';
+            feedback.style.transform = 'translateX(-50%) translateY(0)';
+        }, 10);
         
         // Remove after animation
         setTimeout(() => {
-            feedback.classList.remove('show');
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateX(-50%) translateY(100px)';
             setTimeout(() => feedback.remove(), 300);
         }, 2000);
     }
