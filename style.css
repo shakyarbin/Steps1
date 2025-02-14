@@ -219,56 +219,55 @@ body {
 /* Mobile responsive styles */
 @media (max-width: 600px) {
     .container {
+        padding: 10px;
+    }
+    
+    .stats-card {
         padding: 15px;
     }
     
+    .step-circle {
+        margin: 20px 0;
+    }
+    
     .step-count {
-        width: 150px;
-        height: 150px;
+        width: 160px;
+        height: 160px;
     }
     
     .step-count span {
-        font-size: 30px;
+        font-size: 32px;
+    }
+    
+    .metrics {
+        margin: 15px 0;
     }
     
     .metric .value {
         font-size: 20px;
     }
-
-    .map {
-        height: calc(100% - 50px);
+    
+    .metric .label {
+        font-size: 12px;
     }
     
-    .path {
-        width: 85%;
-        height: 70%;
+    .map-wrapper {
+        height: 100px;
+        margin: 15px 0;
     }
     
-    .pointer {
-        width: 16px;
-        height: 16px;
-        border-width: 2px;
-    }
-
-    .start-point, .end-point {
-        width: 16px;
-        height: 16px;
-    }
-
-    .point-label {
-        font-size: 10px;
-        top: -20px;
-    }
-
-    .flag {
+    #startBtn {
+        padding: 15px;
+        margin-top: 15px;
         font-size: 18px;
-        top: -25px;
+        -webkit-tap-highlight-color: transparent;
     }
-
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+    
+    .nav-bar {
+        bottom: 15px;
+        left: 10px;
+        right: 10px;
+        padding: 12px;
     }
 }
 
