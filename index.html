@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step Counter</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+    <div class="container">
+        <div class="stats-card">
+            <div class="header">
+                <span>Home</span>
+                <div class="menu-container">
+                    <button class="menu-btn">⋮</button>
+                    <div class="menu-dropdown">
+                        <button class="menu-item" id="deleteBtn">Delete Steps</button>
+                        <button class="menu-item" id="resetBtn">Reset Steps</button>
+                    </div>
+                </div>
+            </div>
+            <div class="step-circle">
+                <div class="step-count">
+                    <span id="stepCount">0</span>
+                    <small>Total steps</small>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <span class="value" id="distanceValue">0</span>
+                    <span class="label">km</span>
+                </div>
+                <div class="metric">
+                    <span class="value" id="caloriesValue">0</span>
+                    <span class="label">kcal</span>
+                </div>
+                <div class="metric">
+                    <span class="value" id="timeValue">0</span>
+                    <span class="label">min</span>
+                </div>
+            </div>
+            <div class="map-wrapper">
+                <div class="map-background">
+                    <div class="grid-lines"></div>
+                </div>
+                <div class="map-container">
+                    <div class="progress-path">
+                        <div class="progress-line"></div>
+                        <div class="progress-dot"></div>
+                    </div>
+                    <div class="start-label">START</div>
+                    <div class="end-label">
+                        <span>FINISH</span>
+                        <span class="flag">🚩</span>
+                    </div>
+                </div>
+            </div>
+            <button id="startBtn">START</button>
+        </div>
+        
+        <div class="nav-bar">
+            <button class="nav-btn active">
+                <span class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </span>
+                Home
+            </button>
+            <button class="nav-btn" onclick="window.location.href='report.html'">
+                <span class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </span>
+                Report
+            </button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.stepTracker = new StepTracker();
+        });
+    </script>
+</body>
+</html> 
