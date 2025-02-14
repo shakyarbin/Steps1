@@ -15,25 +15,59 @@ class ReportPage {
     }
 
     loadData() {
-        // Load data from localStorage
-        this.reportData = JSON.parse(localStorage.getItem('stepCounterData')) || {
-            weeklySteps: [0, 0, 0, 0, 0, 0, 0],
-            dailySpeeds: [],
-            totalSteps: 0
-        };
+        // Get step data
+        const stepData = JSON.parse(localStorage.getItem('stepCounterData')) || { steps: 0 };
+        const steps = stepData.steps || 0;
 
-        const state = JSON.parse(localStorage.getItem('stepCounterState')) || {
-            steps: 0,
-            isTracking: false
-        };
+        // Calculate metrics
+        const distance = (steps * 0.0007).toFixed(2); // km
+        const calories = Math.round(steps * 0.04);
+        const minutes = Math.round(steps * 0.0166);
+        const hours = Math.round(minutes / 60);
 
-        // Update step count and distance
-        document.querySelector('.stat-value').textContent = state.steps.toLocaleString();
-        const distance = (state.steps * 0.0007).toFixed(2);
-        document.querySelectorAll('.stat-value')[1].innerHTML = `${distance}<small>MI</small>`;
+        // Update activity rings
+        const movePercent = Math.min((calories / 800) * 100, 100);
+        const exercisePercent = Math.min((minutes / 30) * 100, 100);
+        const standPercent = Math.min((hours / 12) * 100, 100);
 
-        this.updateTrends();
-        this.updateSummary();
+        // Update ring stats
+        document.querySelector('.ring-stat:nth-child(1) .value').innerHTML = 
+            `${calories}/800<small>CAL</small>`;
+        document.querySelector('.ring-stat:nth-child(2) .value').innerHTML = 
+            `${minutes}/30<small>MIN</small>`;
+        document.querySelector('.ring-stat:nth-child(3) .value').innerHTML = 
+            `${hours}/12<small>HRS</small>`;
+
+        // Update rings visualization
+        const rings = document.querySelector('.rings');
+        if (rings) {
+            rings.innerHTML = `
+                <svg viewBox="0 0 100 100">
+                    <circle class="ring-bg" cx="50" cy="50" r="40"/>
+                    <circle class="ring-progress move-ring" cx="50" cy="50" r="40" 
+                        style="stroke-dasharray: ${movePercent * 2.51}, 251"/>
+                    <circle class="ring-bg" cx="50" cy="50" r="35"/>
+                    <circle class="ring-progress exercise-ring" cx="50" cy="50" r="35"
+                        style="stroke-dasharray: ${exercisePercent * 2.20}, 220"/>
+                    <circle class="ring-bg" cx="50" cy="50" r="30"/>
+                    <circle class="ring-progress stand-ring" cx="50" cy="50" r="30"
+                        style="stroke-dasharray: ${standPercent * 1.88}, 188"/>
+                </svg>
+            `;
+        }
+
+        // Update step stats
+        document.getElementById('stepCount').textContent = steps.toLocaleString();
+        document.getElementById('stepDistance').textContent = distance;
+
+        // Update trends
+        this.updateTrends({
+            steps,
+            distance,
+            minutes,
+            hours,
+            calories
+        });
     }
 
     updateActivityRings() {
@@ -72,28 +106,41 @@ class ReportPage {
         `;
     }
 
-    updateTrends() {
-        const state = JSON.parse(localStorage.getItem('stepCounterState')) || { steps: 0 };
-        const minutes = Math.round(state.steps * 0.0166);
-        const distance = (state.steps * 0.0007).toFixed(1);
-        const pace = ((minutes / distance) || 0).toFixed(1);
-
+    updateTrends(data) {
+        const pace = data.minutes > 0 ? (data.distance / (data.minutes / 60)).toFixed(1) : 0;
+        
         const trends = [
-            { label: 'Stand', value: '12HR/DAY', trend: 'up' },
-            { label: 'Exercise', value: `${minutes}MIN/DAY`, trend: 'up' },
-            { label: 'Distance', value: `${distance}MI/DAY`, trend: minutes > 30 ? 'up' : 'down' },
-            { label: 'Walking Pace', value: `${pace}MIN/MI`, trend: 'up' }
+            { 
+                label: 'Stand', 
+                value: `${data.hours}/12 HR/DAY`, 
+                trend: data.hours >= 8 ? 'up' : 'down'
+            },
+            { 
+                label: 'Exercise', 
+                value: `${data.minutes} MIN/DAY`, 
+                trend: data.minutes >= 30 ? 'up' : 'down'
+            },
+            { 
+                label: 'Distance', 
+                value: `${data.distance} KM/DAY`, 
+                trend: data.distance >= 5 ? 'up' : 'down'
+            },
+            { 
+                label: 'Walking Pace', 
+                value: `${pace} KM/H`, 
+                trend: pace >= 4 ? 'up' : 'down'
+            }
         ];
 
-        const trendGrid = document.querySelector('.trend-grid');
+        const trendGrid = document.querySelector('.trends-grid');
         trendGrid.innerHTML = trends.map(trend => `
             <div class="trend-item">
-                <span class="trend-icon ${trend.trend}">
-                    ${trend.trend === 'up' ? '↑' : '↓'}
-                </span>
+                <div class="trend-icon ${trend.trend}">
+                    <i class="fas fa-arrow-${trend.trend}"></i>
+                </div>
                 <div class="trend-info">
-                    <span class="label">${trend.label}</span>
-                    <span class="value">${trend.value}</span>
+                    <span class="trend-label">${trend.label}</span>
+                    <span class="trend-value">${trend.value}</span>
                 </div>
             </div>
         `).join('');

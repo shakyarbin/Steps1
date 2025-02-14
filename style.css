@@ -1240,3 +1240,44 @@ body {
     width: 100%;
     height: 100%;
 }
+
+.rings svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 5;
+}
+
+.ring-progress {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.3s ease;
+}
+
+.move-ring {
+    stroke: #FF453A;
+}
+
+.exercise-ring {
+    stroke: #32D74B;
+}
+
+.stand-ring {
+    stroke: #0A84FF;
+}
+
+.trend-icon.up {
+    background-color: rgba(50, 215, 75, 0.1);
+    color: #32d74b;
+}
+
+.trend-icon.down {
+    background-color: rgba(255, 69, 58, 0.1);
+    color: #ff453a;
+}
