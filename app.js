@@ -90,7 +90,9 @@ class StepTracker {
         if (!ctx) return;
 
         // Get hourly data from storage or initialize empty
-        const hourlySteps = JSON.parse(localStorage.getItem('hourlySteps')) || {};
+        const hourlyData = JSON.parse(localStorage.getItem('hourlyStepsData')) || {};
+        const today = new Date().toDateString();
+        const todayData = hourlyData[today] || {};
         const currentHour = new Date().getHours();
         
         // Generate labels for last 24 hours
@@ -100,7 +102,7 @@ class StepTracker {
         });
 
         // Get data for each hour
-        const data = labels.map(hour => hourlySteps[hour] || 0);
+        const data = labels.map(hour => todayData[hour] || 0);
         
         // Show empty state if no steps
         if (data.every(value => value === 0)) {
@@ -127,7 +129,13 @@ class StepTracker {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => `Hour: ${items[0].label}`,
+                            label: (item) => `Steps: ${item.raw.toLocaleString()}`
+                        }
+                    }
                 },
                 scales: {
                     y: {
@@ -326,13 +334,11 @@ class StepTracker {
     resetSteps() {
         if (confirm('Are you sure you want to reset your steps to zero?')) {
             this.steps = 0;
-            // Clear today's hourly data
-            const today = new Date().toDateString();
-            const hourlyData = JSON.parse(localStorage.getItem('hourlyStepsData')) || {};
-            if (hourlyData[today]) {
-                hourlyData[today] = {};
-                localStorage.setItem('hourlyStepsData', JSON.stringify(hourlyData));
-            }
+            // Only reset step counter data
+            localStorage.setItem('stepCounterData', JSON.stringify({
+                steps: 0,
+                lastUpdated: Date.now()
+            }));
             this.updateDisplays();
             this.menuDropdown.classList.remove('show');
             this.showFeedback('Steps reset successfully');

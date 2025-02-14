@@ -1104,14 +1104,22 @@ body {
     opacity: 1;
 }
 
-.map-block {
+.map-card {
     background-color: #1c1c1e;
     border-radius: 20px;
     padding: 20px;
-    margin: 20px 0;
+    margin-bottom: 20px;
     position: relative;
-    height: 250px;
     overflow: hidden;
+}
+
+.map-block {
+    background-color: transparent;
+    border-radius: 15px;
+    margin: 0;
+    padding: 0;
+    height: 250px;
+    position: relative;
 }
 
 .map-grid {
@@ -1221,23 +1229,17 @@ body {
 }
 
 @media (max-width: 600px) {
-    .map-block {
-        height: 200px;
+    .map-card {
         padding: 15px;
     }
-
-    .track-dot {
-        width: 20px;
-        height: 20px;
-        border-width: 2px;
+    
+    .map-block {
+        height: 200px;
+        padding: 0;
     }
-
-    .start-point, .end-point {
-        font-size: 12px;
-    }
-
-    .flag {
-        font-size: 14px;
+    
+    .track-path {
+        width: 95%;
     }
 }
 
@@ -1246,17 +1248,22 @@ body {
     border-radius: 15px;
     padding: 20px;
     margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .chart-header {
     color: #8e8e93;
     font-size: 14px;
     margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .chart-container {
     height: 150px;
     position: relative;
+    width: 100%;
 }
 
 .empty-state {
@@ -1267,12 +1274,16 @@ body {
     color: #8e8e93;
     font-size: 14px;
     text-align: center;
+    background-color: rgba(28, 28, 30, 0.8);
+    padding: 10px 20px;
+    border-radius: 10px;
     display: none;
 }
 
 #hourlyStepsChart {
     width: 100%;
     height: 100%;
+    cursor: pointer;
 }
 
 .rings svg {
@@ -1314,4 +1325,188 @@ body {
 .trend-icon.down {
     background-color: rgba(255, 69, 58, 0.1);
     color: #ff453a;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.summary-card {
+    background-color: #1c1c1e;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+}
+
+.summary-card i {
+    font-size: 24px;
+    color: #FF9500;
+    margin-bottom: 10px;
+}
+
+.summary-label {
+    color: #8e8e93;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.summary-unit {
+    color: #8e8e93;
+    font-size: 12px;
+}
+
+.map-card {
+    background-color: #1c1c1e;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.map-block {
+    background-color: transparent;
+    border-radius: 15px;
+    margin: 0;
+    padding: 0;
+    height: 250px;
+    position: relative;
+}
+
+.map-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.5;
+}
+
+.grid-lines {
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    animation: moveGrid 20s linear infinite;
+}
+
+.track-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.track-path {
+    width: 90%;
+    height: 80%;
+    position: relative;
+}
+
+.track-path svg {
+    width: 100%;
+    height: 100%;
+}
+
+.track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.progress {
+    fill: none;
+    stroke: url(#pathGradient);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.track-dot {
+    width: 24px;
+    height: 24px;
+    background: #FF2D55;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px rgba(255, 45, 85, 0.7);
+    transition: all 0.3s ease;
+}
+
+.track-labels {
+    position: absolute;
+    width: 90%;
+    pointer-events: none;
+}
+
+.start-point, .end-point {
+    position: absolute;
+    color: #8e8e93;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.start-point {
+    left: 20px;
+    top: 50%;
+}
+
+.end-point {
+    right: 20px;
+    top: 50%;
+}
+
+.flag {
+    font-size: 16px;
+    filter: drop-shadow(0 0 5px rgba(255, 45, 85, 0.5));
+}
+
+@keyframes moveGrid {
+    0% { background-position: 0 0; }
+    100% { background-position: 30px 30px; }
+}
+
+@media (max-width: 600px) {
+    .map-card {
+        padding: 15px;
+    }
+    
+    .map-block {
+        height: 200px;
+        padding: 0;
+    }
+    
+    .track-path {
+        width: 95%;
+    }
 }

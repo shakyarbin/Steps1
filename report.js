@@ -12,19 +12,12 @@ class ReportPage {
         const resetBtn = document.querySelector('.reset-btn-report');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
-                if (confirm('Are you sure you want to reset all stats to zero? This cannot be undone.')) {
-                    // Clear all stored data
-                    localStorage.removeItem('stepCounterData');
+                if (confirm('Reset all activity stats and charts to zero? This action cannot be undone.')) {
+                    // Clear only report-related data
                     localStorage.removeItem('hourlyStepsData');
-                    localStorage.removeItem('activeTime');
-                    localStorage.removeItem('stepCounterState');
-                    
-                    // Reset all UI elements
-                    document.getElementById('stepCount').textContent = '0';
-                    document.getElementById('stepDistance').textContent = '0.00';
-                    document.getElementById('moveValue').innerHTML = '0/800<small>CAL</small>';
-                    document.getElementById('exerciseValue').innerHTML = '0/30<small>MIN</small>';
-                    document.getElementById('standValue').innerHTML = '0/12<small>HRS</small>';
+                    localStorage.removeItem('activityRings');
+                    localStorage.removeItem('healthMetrics');
+                    localStorage.removeItem('trends');
                     
                     // Reset activity rings
                     const rings = document.querySelector('.rings');
@@ -43,6 +36,11 @@ class ReportPage {
                             </svg>
                         `;
                     }
+                    
+                    // Reset ring stats
+                    document.getElementById('moveValue').innerHTML = '0/800<small>CAL</small>';
+                    document.getElementById('exerciseValue').innerHTML = '0/30<small>MIN</small>';
+                    document.getElementById('standValue').innerHTML = '0/12<small>HRS</small>';
                     
                     // Reset trends
                     const trends = [
@@ -66,7 +64,7 @@ class ReportPage {
                     `).join('');
                     
                     // Show feedback
-                    this.showFeedback('All stats have been reset to zero');
+                    this.showFeedback('Activity stats and charts reset to zero');
                     
                     // Reinitialize charts with empty data
                     this.initializeCharts();
@@ -118,24 +116,42 @@ class ReportPage {
     }
 
     loadData() {
-        // Get step data
+        // Get step data from localStorage
         const stepData = JSON.parse(localStorage.getItem('stepCounterData')) || { steps: 0 };
-        const steps = stepData.steps || 0;
+        const hourlyData = JSON.parse(localStorage.getItem('hourlyStepsData')) || {};
+        const today = new Date().toDateString();
+        const todayData = hourlyData[today] || {};
+        
+        // Calculate weekly stats
+        const weeklySteps = this.calculateWeeklyStats(hourlyData);
+        const weeklyAvg = Math.round(weeklySteps.reduce((a, b) => a + b, 0) / 7);
+        const bestDay = Math.max(...weeklySteps);
+        
+        // Calculate active time (minutes with steps > 0)
+        const activeMinutes = Object.values(todayData).filter(steps => steps > 0).length * 60;
+        
+        // Calculate calories
+        const totalCalories = Math.round(stepData.steps * 0.04);
+        
+        // Update summary widgets
+        document.getElementById('weeklyAvgSteps').textContent = weeklyAvg.toLocaleString();
+        document.getElementById('bestDaySteps').textContent = bestDay.toLocaleString();
+        document.getElementById('activeTime').textContent = activeMinutes;
+        document.getElementById('totalCalories').textContent = totalCalories;
 
         // Calculate metrics
-        const distance = (steps * 0.0007).toFixed(2); // km
-        const calories = Math.round(steps * 0.04);
-        const minutes = Math.round(steps * 0.0166);
+        const distance = (stepData.steps * 0.0007).toFixed(2); // km
+        const minutes = Math.round(stepData.steps * 0.0166);
         const hours = Math.round(minutes / 60);
 
         // Update activity rings
-        const movePercent = Math.min((calories / 800) * 100, 100);
+        const movePercent = Math.min((totalCalories / 800) * 100, 100);
         const exercisePercent = Math.min((minutes / 30) * 100, 100);
         const standPercent = Math.min((hours / 12) * 100, 100);
 
         // Update ring stats
         document.querySelector('.ring-stat:nth-child(1) .value').innerHTML = 
-            `${calories}/800<small>CAL</small>`;
+            `${totalCalories}/800<small>CAL</small>`;
         document.querySelector('.ring-stat:nth-child(2) .value').innerHTML = 
             `${minutes}/30<small>MIN</small>`;
         document.querySelector('.ring-stat:nth-child(3) .value').innerHTML = 
@@ -160,17 +176,38 @@ class ReportPage {
         }
 
         // Update step stats
-        document.getElementById('stepCount').textContent = steps.toLocaleString();
+        document.getElementById('stepCount').textContent = stepData.steps.toLocaleString();
         document.getElementById('stepDistance').textContent = distance;
 
         // Update trends
         this.updateTrends({
-            steps,
+            steps: stepData.steps,
             distance,
             minutes,
             hours,
-            calories
+            calories: totalCalories
         });
+    }
+
+    calculateWeeklyStats(hourlyData) {
+        const weeklySteps = [];
+        const today = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateKey = date.toDateString();
+            
+            if (hourlyData[dateKey]) {
+                const dailySteps = Object.values(hourlyData[dateKey])
+                    .reduce((sum, steps) => sum + steps, 0);
+                weeklySteps.push(dailySteps);
+            } else {
+                weeklySteps.push(0);
+            }
+        }
+        
+        return weeklySteps;
     }
 
     updateActivityRings() {
