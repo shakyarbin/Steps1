@@ -162,27 +162,32 @@ class StepTracker {
     }
 
     updateProgress() {
-        const progressLine = document.querySelector('.progress-line');
-        const progressDot = document.querySelector('.progress-dot');
+        const progress = document.querySelector('.progress');
+        const trackDot = document.querySelector('.track-dot');
         const totalStepsToFinish = 100;
-        const progress = Math.min(this.steps / totalStepsToFinish, 1);
+        const progressValue = Math.min(this.steps / totalStepsToFinish, 1);
         
-        progressLine.style.width = `${progress * 100}%`;
-        progressDot.style.left = `${progress * 100}%`;
+        // Update progress path
+        const pathLength = progress.getTotalLength();
+        progress.style.strokeDashoffset = pathLength - (pathLength * progressValue);
         
-        // Calculate dot position along the curved path
-        const y = Math.sin(progress * Math.PI * 2) * 15;
-        progressDot.style.top = `calc(50% + ${y}px)`;
+        // Update dot position
+        const point = progress.getPointAtLength(pathLength * progressValue);
+        trackDot.style.left = `${point.x}px`;
+        trackDot.style.top = `${point.y}px`;
         
-        // Calculate rotation angle based on position
-        const angle = Math.cos(progress * Math.PI * 2) * 30;
-        progressDot.style.setProperty('--rotate', `${angle}deg`);
+        // Calculate dot rotation
+        if (progressValue < 1) {
+            const nextPoint = progress.getPointAtLength(Math.min(pathLength * progressValue + 1, pathLength));
+            const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * 180 / Math.PI;
+            trackDot.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+        }
         
-        if (progress >= 1) {
-            progressDot.classList.add('complete');
+        if (progressValue >= 1) {
+            trackDot.classList.add('complete');
             document.querySelector('.flag')?.style.setProperty('animation', 'wave 1s infinite');
         } else {
-            progressDot.classList.remove('complete');
+            trackDot.classList.remove('complete');
         }
     }
 

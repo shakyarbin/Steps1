@@ -1016,4 +1016,141 @@ body {
 .feedback-toast.show {
     transform: translateX(-50%) translateY(0);
     opacity: 1;
+}
+
+.map-block {
+    background-color: #1c1c1e;
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px 0;
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+}
+
+.map-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.5;
+}
+
+.grid-lines {
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    animation: moveGrid 20s linear infinite;
+}
+
+.track-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.track-path {
+    width: 90%;
+    height: 80%;
+    position: relative;
+}
+
+.track-path svg {
+    width: 100%;
+    height: 100%;
+}
+
+.track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.progress {
+    fill: none;
+    stroke: url(#pathGradient);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.track-dot {
+    width: 24px;
+    height: 24px;
+    background: #FF2D55;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px rgba(255, 45, 85, 0.7);
+    transition: all 0.3s ease;
+}
+
+.track-labels {
+    position: absolute;
+    width: 90%;
+    pointer-events: none;
+}
+
+.start-point, .end-point {
+    position: absolute;
+    color: #8e8e93;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.start-point {
+    left: 20px;
+    top: 50%;
+}
+
+.end-point {
+    right: 20px;
+    top: 50%;
+}
+
+.flag {
+    font-size: 16px;
+    filter: drop-shadow(0 0 5px rgba(255, 45, 85, 0.5));
+}
+
+@keyframes moveGrid {
+    0% { background-position: 0 0; }
+    100% { background-position: 30px 30px; }
+}
+
+@media (max-width: 600px) {
+    .map-block {
+        height: 200px;
+        padding: 15px;
+    }
+
+    .track-dot {
+        width: 20px;
+        height: 20px;
+        border-width: 2px;
+    }
+
+    .start-point, .end-point {
+        font-size: 12px;
+    }
+
+    .flag {
+        font-size: 14px;
+    }
 } 

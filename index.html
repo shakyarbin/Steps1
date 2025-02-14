@@ -52,19 +52,30 @@
                     <span class="label">min</span>
                 </div>
             </div>
-            <div class="map-wrapper">
-                <div class="map-background">
+            <div class="map-block">
+                <div class="map-grid">
                     <div class="grid-lines"></div>
                 </div>
-                <div class="map-container">
-                    <div class="progress-path">
-                        <div class="progress-line"></div>
-                        <div class="progress-dot"></div>
+                <div class="track-container">
+                    <div class="track-path">
+                        <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#FF9500"/>
+                                    <stop offset="100%" style="stop-color:#FF2D55"/>
+                                </linearGradient>
+                            </defs>
+                            <path class="track" d="M20,75 C50,75 60,30 100,30 S150,120 200,120 S250,30 280,75" />
+                            <path class="progress" d="M20,75 C50,75 60,30 100,30 S150,120 200,120 S250,30 280,75" />
+                        </svg>
+                        <div class="track-dot"></div>
                     </div>
-                    <div class="start-label">START</div>
-                    <div class="end-label">
-                        <span>FINISH</span>
-                        <span class="flag">🚩</span>
+                    <div class="track-labels">
+                        <div class="start-point">START</div>
+                        <div class="end-point">
+                            <span>FINISH</span>
+                            <span class="flag">🚩</span>
+                        </div>
                     </div>
                 </div>
             </div>
