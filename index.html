@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step Counter</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,114 +15,186 @@
     <link rel="manifest" href="/manifest.json">
 </head>
 <body>
-    <div class="container">
-        <div class="stats-card">
-            <div class="header">
-                <span>Home</span>
-                <div class="menu-container">
-                    <button class="menu-btn" aria-label="Menu">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div class="menu-dropdown">
-                        <button class="menu-item" id="resetBtn">
-                            <i class="fas fa-redo"></i>
-                            Reset Steps
-                        </button>
-                        <button class="menu-item" id="deleteBtn">
-                            <i class="fas fa-trash"></i>
-                            Delete All
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="step-circle">
-                <div class="step-count">
-                    <span id="stepCount">0</span>
-                    <small>Total steps</small>
-                </div>
-            </div>
-            <div class="metrics">
-                <div class="metric">
-                    <span class="value" id="distanceValue">0</span>
-                    <span class="label">km</span>
-                </div>
-                <div class="metric">
-                    <span class="value" id="caloriesValue">0</span>
-                    <span class="label">kcal</span>
-                </div>
-                <div class="metric">
-                    <span class="value" id="timeValue">0</span>
-                    <span class="label">min</span>
-                </div>
-            </div>
-            <div class="button-group">
-                <button id="resetBtnOutside" class="reset-btn">
-                    Reset Steps
-                </button>
-                <button id="startBtn">START</button>
-            </div>
-            <div class="map-block">
-                <div class="map-grid">
-                    <div class="grid-lines"></div>
-                </div>
-                <div class="track-container">
-                    <div class="track-path">
-                        <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid meet">
-                            <defs>
-                                <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:#FF9500"/>
-                                    <stop offset="100%" style="stop-color:#FF2D55"/>
-                                </linearGradient>
-                            </defs>
-                            <path class="track" d="M20,75 C50,75 60,30 100,30 S150,120 200,120 S250,30 280,75" />
-                            <path class="progress" d="M20,75 C50,75 60,30 100,30 S150,120 200,120 S250,30 280,75" />
-                        </svg>
-                        <div class="track-dot"></div>
-                    </div>
-                    <div class="track-labels">
-                        <div class="start-point">START</div>
-                        <div class="end-point">
-                            <span>FINISH</span>
-                            <span class="flag">🚩</span>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function StepTracker() {
+            const [steps, setSteps] = React.useState(0);
+            const [lastZ, setLastZ] = React.useState(null);
+            const [moving, setMoving] = React.useState(false);
+            const [lastStepTime, setLastStepTime] = React.useState(0);
+            const [isTracking, setIsTracking] = React.useState(false);
+
+            React.useEffect(() => {
+                if (!isTracking) return;
+
+                const handleMotion = (event) => {
+                    const z = event.accelerationIncludingGravity?.z;
+                    const currentTime = Date.now();
+
+                    if (z !== null) {
+                        if (lastZ !== null) {
+                            const deltaZ = Math.abs(z - lastZ);
+                            if (deltaZ > 2 && currentTime - lastStepTime >= 333) {
+                                if (!moving) {
+                                    setSteps(prev => prev + 1);
+                                    setLastStepTime(currentTime);
+                                    setMoving(true);
+                                }
+                            } else if (deltaZ < 1) {
+                                setMoving(false);
+                            }
+                        }
+                        setLastZ(z);
+                    }
+                };
+
+                const requestMotionPermission = async () => {
+                    if (typeof DeviceMotionEvent.requestPermission === "function") {
+                        try {
+                            const permission = await DeviceMotionEvent.requestPermission();
+                            if (permission === "granted") {
+                                window.addEventListener("devicemotion", handleMotion);
+                            }
+                        } catch (error) {
+                            console.error("Motion permission denied");
+                        }
+                    } else {
+                        window.addEventListener("devicemotion", handleMotion);
+                    }
+                };
+
+                requestMotionPermission();
+
+                return () => {
+                    window.removeEventListener("devicemotion", handleMotion);
+                };
+            }, [isTracking, lastZ, moving, lastStepTime]);
+
+            const toggleTracking = () => {
+                setIsTracking(!isTracking);
+            };
+
+            const resetSteps = () => {
+                if (confirm('Are you sure you want to reset your steps to zero?')) {
+                    setSteps(0);
+                }
+            };
+
+            return (
+                <div className="container">
+                    <div className="stats-card">
+                        <div className="header">
+                            <span>Home</span>
+                            <div className="menu-container">
+                                <button className="menu-btn" aria-label="Menu">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div className="menu-dropdown">
+                                    <button className="menu-item" id="resetBtn">
+                                        <i class="fas fa-redo"></i>
+                                        Reset Steps
+                                    </button>
+                                    <button className="menu-item" id="deleteBtn">
+                                        <i class="fas fa-trash"></i>
+                                        Delete All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="step-circle">
+                            <div className="step-count">
+                                <span>{steps}</span>
+                                <small>Total steps</small>
+                            </div>
+                        </div>
+                        <div className="metrics">
+                            <div className="metric">
+                                <span className="value">{(steps * 0.0007).toFixed(2)}</span>
+                                <span className="label">km</span>
+                            </div>
+                            <div className="metric">
+                                <span className="value">{Math.round(steps * 0.04)}</span>
+                                <span className="label">kcal</span>
+                            </div>
+                            <div className="metric">
+                                <span className="value">{Math.round(steps / 100)}</span>
+                                <span className="label">min</span>
+                            </div>
+                        </div>
+                        <div className="button-group">
+                            <button className="reset-btn" onClick={resetSteps}>
+                                Reset Steps
+                            </button>
+                            <button 
+                                id="startBtn" 
+                                onClick={toggleTracking}
+                                className={isTracking ? 'active' : ''}
+                            >
+                                {isTracking ? 'STOP' : 'START'}
+                            </button>
+                        </div>
+                        <div className="map-block">
+                            <div className="map-grid">
+                                <div className="grid-lines"></div>
+                            </div>
+                            <div className="track-container">
+                                <div className="track-path">
+                                    <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid meet">
+                                        <defs>
+                                            <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" style="stop-color:#FF9500"/>
+                                                <stop offset="100%" style="stop-color:#FF2D55"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <path class="track" d="M20,75 C50,75 60,30 100,30 S150,120 200,120 S250,30 280,75" />
+                                        <path class="progress" d="M20,75 C50,75 60,30 100,30 S150,120 200,120 S250,30 280,75" />
+                                    </svg>
+                                    <div className="track-dot"></div>
+                                </div>
+                                <div className="track-labels">
+                                    <div className="start-point">START</div>
+                                    <div className="end-point">
+                                        <span>FINISH</span>
+                                        <span className="flag">🚩</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div className="nav-bar">
+                        <button className="nav-btn active">
+                            <span className="icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                </svg>
+                            </span>
+                            Home
+                        </button>
+                        <button className="nav-btn" onclick="window.location.href='report.html'">
+                            <span className="icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </span>
+                            Report
+                        </button>
+                        <button className="nav-btn" onclick="window.location.href='link.com'">
+                            <span className="icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18M3 12h18M3 18h18M12 3v18"/>
+                                    <circle cx="12" cy="12" r="4"/>
+                                </svg>
+                            </span>
+                            Calories
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="nav-bar">
-            <button class="nav-btn active">
-                <span class="icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                </span>
-                Home
-            </button>
-            <button class="nav-btn" onclick="window.location.href='report.html'">
-                <span class="icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </span>
-                Report
-            </button>
-            <button class="nav-btn" onclick="window.location.href='link.com'">
-                <span class="icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18M3 12h18M3 18h18M12 3v18"/>
-                        <circle cx="12" cy="12" r="4"/>
-                    </svg>
-                </span>
-                Calories
-            </button>
-        </div>
-    </div>
-    <script src="app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            window.stepTracker = new StepTracker();
-        });
+            );
+        }
+
+        ReactDOM.render(<StepTracker />, document.getElementById('root'));
     </script>
 </body>
 </html> 
