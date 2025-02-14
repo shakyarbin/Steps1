@@ -100,62 +100,40 @@ class ReportPage {
     }
 
     initializeCharts() {
-        this.createHourlyStepsChart();
-        this.createHourlyDistanceChart();
-        this.createPaceChart();
-    }
-
-    createHourlyStepsChart() {
-        const ctx = document.getElementById('hourlyStepsChart');
-        if (!ctx) return;
-
-        const stepsData = JSON.parse(localStorage.getItem('stepsData')) || {
-            hourly: {},
-            daily: {},
-            weekly: {}
-        };
-
+        // Get stored hourly data
+        const hourlyData = JSON.parse(localStorage.getItem('hourlyStepsData')) || {};
+        const today = new Date().toDateString();
+        const todayData = hourlyData[today] || {};
+        
+        // Get current hour for proper time labels
         const now = new Date();
-        const currentDate = now.toDateString();
         const currentHour = now.getHours();
         
-        // Generate dummy data for testing
-        const last24Hours = Array.from({length: 24}, (_, i) => {
+        // Generate labels for last 24 hours
+        const labels = Array.from({length: 24}, (_, i) => {
             const hour = (currentHour - 23 + i + 24) % 24;
-            const hourKey = `${hour}:00`;
-            
-            // Generate random steps between 100 and 1000 for testing
-            return {
-                hour: hourKey,
-                steps: Math.floor(Math.random() * 900) + 100
-            };
+            return `${hour}:00`;
         });
 
-        // Calculate percentage change
-        const previousTotal = last24Hours.slice(0, 12)
-            .reduce((sum, hour) => sum + hour.steps, 0);
-        const currentTotal = last24Hours.slice(12)
-            .reduce((sum, hour) => sum + hour.steps, 0);
-        const percentChange = previousTotal > 0 ? 
-            ((currentTotal - previousTotal) / previousTotal * 100).toFixed(0) : 0;
+        // Get actual data or use 0 for empty hours
+        const data = labels.map(hour => todayData[hour] || 0);
+        
+        // Use fake data if no steps recorded today
+        const hasData = Object.values(todayData).some(v => v > 0);
+        const chartData = hasData ? data : labels.map(() => Math.floor(Math.random() * 1000) + 100);
 
-        // Update trend value
-        const trendValue = document.querySelector('.trend-value');
-        if (trendValue) {
-            const isIncrease = percentChange >= 0;
-            trendValue.textContent = `${isIncrease ? '↑' : '↓'} ${Math.abs(percentChange)}%`;
-            trendValue.style.color = isIncrease ? '#32d74b' : '#ff453a';
-        }
+        const ctx = document.getElementById('hourlyStepsChart');
+        if (!ctx) return;
 
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: last24Hours.map(h => h.hour),
+                labels: labels,
                 datasets: [{
-                    data: last24Hours.map(h => h.steps),
-                    backgroundColor: '#007AFF',
-                    borderRadius: 6,
-                    borderSkipped: false,
+                    label: 'Steps',
+                    data: chartData,
+                    backgroundColor: hasData ? '#32d74b' : '#8e8e93',
+                    borderRadius: 4,
                     barThickness: 8
                 }]
             },
@@ -163,22 +141,15 @@ class ReportPage {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        enabled: true,
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: '#1c1c1e',
-                        titleColor: '#ffffff',
-                        bodyColor: '#8e8e93',
-                        borderColor: '#333333',
-                        borderWidth: 1,
-                        padding: 10,
-                        displayColors: false,
                         callbacks: {
-                            label: (context) => `${context.raw} steps`
+                            title: (items) => {
+                                return `Hour: ${items[0].label}`;
+                            },
+                            label: (item) => {
+                                return `Steps: ${item.raw.toLocaleString()}`;
+                            }
                         }
                     }
                 },
@@ -186,40 +157,27 @@ class ReportPage {
                     y: {
                         beginAtZero: true,
                         grid: {
-                            display: false
-                        },
-                        ticks: {
-                            display: false
-                        },
-                        border: {
-                            display: false
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
+                            color: 'rgba(255, 255, 255, 0.1)'
                         },
                         ticks: {
                             color: '#8e8e93',
-                            font: { size: 10 },
+                            font: { size: 12 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#8e8e93',
+                            font: { size: 12 },
                             maxTicksLimit: 6,
-                            padding: 8,
-                            callback: function(val, index) {
-                                // Show fewer x-axis labels
-                                return index % 4 === 0 ? this.getLabelForValue(val) : '';
-                            }
-                        },
-                        border: {
-                            display: false
+                            maxRotation: 0
                         }
                     }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
                 }
             }
         });
+        this.createHourlyDistanceChart();
+        this.createPaceChart();
     }
 
     createHourlyDistanceChart() {
@@ -390,13 +348,7 @@ class ReportPage {
 
 // Initialize the report page
 document.addEventListener('DOMContentLoaded', () => {
-    // Load saved data
-    const savedData = localStorage.getItem('stepCounterData');
-    if (savedData) {
-        const data = JSON.parse(savedData);
-        updateStats(data);
-        initializeHourlyChart();
-    }
+    new ReportPage();
 });
 
 function updateStats(data) {

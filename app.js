@@ -221,6 +221,7 @@ class StepTracker {
                 this.steps++;
                 this.lastStepTime = currentTime;
                 this.moving = true;
+                this.updateHourlySteps();
                 this.updateDisplays();
             }
         } else if (deltaZ < 1) {
@@ -228,6 +229,26 @@ class StepTracker {
         }
         
         this.lastZ = z;
+    }
+
+    updateHourlySteps() {
+        const now = new Date();
+        const hourKey = `${now.getHours()}:00`;
+        const dateKey = now.toDateString();
+
+        // Get stored data
+        const hourlyData = JSON.parse(localStorage.getItem('hourlyStepsData')) || {};
+        
+        // Initialize date if not exists
+        if (!hourlyData[dateKey]) {
+            hourlyData[dateKey] = {};
+        }
+        
+        // Increment steps for current hour
+        hourlyData[dateKey][hourKey] = (hourlyData[dateKey][hourKey] || 0) + 1;
+        
+        // Store updated data
+        localStorage.setItem('hourlyStepsData', JSON.stringify(hourlyData));
     }
 
     updateDisplays() {
@@ -305,6 +326,13 @@ class StepTracker {
     resetSteps() {
         if (confirm('Are you sure you want to reset your steps to zero?')) {
             this.steps = 0;
+            // Clear today's hourly data
+            const today = new Date().toDateString();
+            const hourlyData = JSON.parse(localStorage.getItem('hourlyStepsData')) || {};
+            if (hourlyData[today]) {
+                hourlyData[today] = {};
+                localStorage.setItem('hourlyStepsData', JSON.stringify(hourlyData));
+            }
             this.updateDisplays();
             this.menuDropdown.classList.remove('show');
             this.showFeedback('Steps reset successfully');

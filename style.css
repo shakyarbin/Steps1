@@ -503,19 +503,29 @@ body {
     background-color: #1c1c1e;
     border-radius: 15px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
 
 .chart-header {
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: bold;
+    color: #8e8e93;
+    font-size: 14px;
     margin-bottom: 15px;
 }
 
 .chart-container {
     height: 200px;
     position: relative;
+}
+
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #8e8e93;
+    font-size: 14px;
+    text-align: center;
+    display: none;
 }
 
 .speed-stats {
