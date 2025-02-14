@@ -90,7 +90,7 @@ class StepTracker {
     }
 
     async toggleTracking(event) {
-        event.preventDefault(); // Prevent double triggering
+        event.preventDefault();
         
         if (!this.isTracking) {
             try {
@@ -106,11 +106,15 @@ class StepTracker {
     }
 
     async requestMotionPermission() {
-        if (typeof DeviceMotionEvent.requestPermission === 'function') {
-            const permission = await DeviceMotionEvent.requestPermission();
-            if (permission !== 'granted') {
-                throw new Error('Motion permission denied');
+        if (typeof window !== "undefined" && "DeviceMotionEvent" in window) {
+            if (typeof DeviceMotionEvent.requestPermission === "function") {
+                const permissionState = await DeviceMotionEvent.requestPermission();
+                if (permissionState !== "granted") {
+                    throw new Error("Motion permission denied. Please enable it in device settings.");
+                }
             }
+        } else {
+            throw new Error("Device motion not supported on this device");
         }
     }
 
@@ -119,32 +123,34 @@ class StepTracker {
         this.isTracking = true;
         this.startBtn.textContent = 'STOP';
         this.startBtn.style.backgroundColor = '#FF453A';
+        this.startBtn.classList.add('active');
     }
 
     stopTracking() {
         window.removeEventListener('devicemotion', this.handleMotion);
         this.isTracking = false;
-            this.startBtn.textContent = 'START';
-            this.startBtn.style.backgroundColor = '#FF9500';
+        this.startBtn.textContent = 'START';
+        this.startBtn.style.backgroundColor = '#32d74b';
+        this.startBtn.classList.remove('active');
     }
 
     handleMotion(event) {
         if (!this.isTracking) return;
 
-        const z = event.accelerationIncludingGravity?.z;
-        if (!z) return;
+        const z = event.accelerationIncludingGravity.z;
+        if (z === null) return;
 
         const currentTime = Date.now();
         const deltaZ = Math.abs(z - (this.lastZ || z));
         
-        if (deltaZ > 1.5 && currentTime - this.lastStepTime >= 250) {
+        if (deltaZ > 2 && currentTime - this.lastStepTime >= 333) {
             if (!this.moving) {
                 this.steps++;
                 this.lastStepTime = currentTime;
                 this.moving = true;
                 this.updateDisplays();
             }
-        } else if (deltaZ < 0.8) {
+        } else if (deltaZ < 1) {
             this.moving = false;
         }
         
