@@ -181,7 +181,7 @@ body {
     background-color: #1c1c1e;
     padding: 15px;
     border-radius: 20px;
-    gap: 20px;
+    gap: 10px;
     position: fixed;
     bottom: 20px;
     left: 15px;
@@ -192,7 +192,7 @@ body {
 
 .nav-btn {
     flex: 1;
-    max-width: 120px;
+    max-width: 90px;
     background: none;
     border: none;
     color: #8e8e93;
@@ -201,7 +201,7 @@ body {
     align-items: center;
     gap: 5px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     padding: 8px;
     transition: all 0.2s ease;
 }
@@ -365,8 +365,9 @@ body {
     }
 
     .nav-btn {
-        font-size: 11px;
+        font-size: 10px;
         padding: 6px;
+        max-width: 70px;
     }
 
     .nav-btn .icon svg {

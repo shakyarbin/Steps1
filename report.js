@@ -19,13 +19,57 @@ class ReportPage {
                     localStorage.removeItem('activeTime');
                     localStorage.removeItem('stepCounterState');
                     
+                    // Reset all UI elements
+                    document.getElementById('stepCount').textContent = '0';
+                    document.getElementById('stepDistance').textContent = '0.00';
+                    document.getElementById('moveValue').innerHTML = '0/800<small>CAL</small>';
+                    document.getElementById('exerciseValue').innerHTML = '0/30<small>MIN</small>';
+                    document.getElementById('standValue').innerHTML = '0/12<small>HRS</small>';
+                    
+                    // Reset activity rings
+                    const rings = document.querySelector('.rings');
+                    if (rings) {
+                        rings.innerHTML = `
+                            <svg viewBox="0 0 100 100">
+                                <circle class="ring-bg" cx="50" cy="50" r="40"/>
+                                <circle class="ring-progress move-ring" cx="50" cy="50" r="40" 
+                                    style="stroke-dasharray: 0, 251"/>
+                                <circle class="ring-bg" cx="50" cy="50" r="35"/>
+                                <circle class="ring-progress exercise-ring" cx="50" cy="50" r="35"
+                                    style="stroke-dasharray: 0, 220"/>
+                                <circle class="ring-bg" cx="50" cy="50" r="30"/>
+                                <circle class="ring-progress stand-ring" cx="50" cy="50" r="30"
+                                    style="stroke-dasharray: 0, 188"/>
+                            </svg>
+                        `;
+                    }
+                    
+                    // Reset trends
+                    const trends = [
+                        { label: 'Stand', value: '0/12 HR/DAY', trend: 'down' },
+                        { label: 'Exercise', value: '0 MIN/DAY', trend: 'down' },
+                        { label: 'Distance', value: '0.00 KM/DAY', trend: 'down' },
+                        { label: 'Walking Pace', value: '0.0 KM/H', trend: 'down' }
+                    ];
+                    
+                    const trendGrid = document.querySelector('.trends-grid');
+                    trendGrid.innerHTML = trends.map(trend => `
+                        <div class="trend-item">
+                            <div class="trend-icon ${trend.trend}">
+                                <i class="fas fa-arrow-${trend.trend}"></i>
+                            </div>
+                            <div class="trend-info">
+                                <span class="trend-label">${trend.label}</span>
+                                <span class="trend-value">${trend.value}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
                     // Show feedback
                     this.showFeedback('All stats have been reset to zero');
                     
-                    // Reload the page to refresh all stats
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // Reinitialize charts with empty data
+                    this.initializeCharts();
                 }
             });
         }
