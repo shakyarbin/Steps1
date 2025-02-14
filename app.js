@@ -76,8 +76,81 @@ class StepTracker {
         });
     }
 
+        // Initialize chart
+        this.initializeChart();
+        
         // Load saved data
         this.loadSavedData();
+    }
+
+    initializeChart() {
+        const ctx = document.getElementById('hourlyStepsChart');
+        const emptyMessage = document.getElementById('emptyChartMessage');
+        
+        if (!ctx) return;
+
+        // Get hourly data from storage or initialize empty
+        const hourlySteps = JSON.parse(localStorage.getItem('hourlySteps')) || {};
+        const currentHour = new Date().getHours();
+        
+        // Generate labels for last 24 hours
+        const labels = Array.from({length: 24}, (_, i) => {
+            const hour = (currentHour - 23 + i + 24) % 24;
+            return `${hour}:00`;
+        });
+
+        // Get data for each hour
+        const data = labels.map(hour => hourlySteps[hour] || 0);
+        
+        // Show empty state if no steps
+        if (data.every(value => value === 0)) {
+            ctx.style.display = 'none';
+            emptyMessage.style.display = 'block';
+            return;
+        }
+
+        ctx.style.display = 'block';
+        emptyMessage.style.display = 'none';
+
+        this.stepsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: '#32d74b',
+                    borderRadius: 4,
+                    barThickness: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#8e8e93',
+                            font: { size: 12 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#8e8e93',
+                            font: { size: 12 },
+                            maxTicksLimit: 6
+                        }
+                    }
+                }
+            }
+        });
     }
 
     loadSavedData() {
@@ -164,6 +237,22 @@ class StepTracker {
         this.timeDisplay.textContent = Math.round(this.steps / 100);
         this.updateProgress();
         this.saveData();
+
+        // Update hourly steps
+        const hour = new Date().getHours() + ':00';
+        const hourlySteps = JSON.parse(localStorage.getItem('hourlySteps')) || {};
+        hourlySteps[hour] = (hourlySteps[hour] || 0) + 1;
+        localStorage.setItem('hourlySteps', JSON.stringify(hourlySteps));
+
+        // Update chart if it exists
+        if (this.stepsChart) {
+            const dataset = this.stepsChart.data.datasets[0];
+            const hourIndex = this.stepsChart.data.labels.indexOf(hour);
+            if (hourIndex !== -1) {
+                dataset.data[hourIndex] = hourlySteps[hour];
+                this.stepsChart.update();
+            }
+        }
     }
 
     updateProgress() {
