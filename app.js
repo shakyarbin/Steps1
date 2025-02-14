@@ -30,24 +30,51 @@ class StepTracker {
         }
 
         // Add menu event listeners
-        this.menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.menuDropdown.classList.toggle('show');
-        });
+        if (this.menuBtn && this.menuDropdown) {
+            this.menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.menuDropdown.classList.toggle('show');
+            });
 
-        this.resetBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.resetSteps();
-        });
-        
-        this.deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.deleteSteps();
-        });
+            // Add touch event for mobile
+            this.menuBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.menuDropdown.classList.toggle('show');
+            });
+        }
 
-        // Close menu when clicking outside
+        if (this.resetBtn) {
+            this.resetBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.resetSteps();
+            });
+            // Add touch event for mobile
+            this.resetBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.resetSteps();
+            });
+        }
+
+        if (this.deleteBtn) {
+            this.deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteSteps();
+            });
+            // Add touch event for mobile
+            this.deleteBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.deleteSteps();
+            });
+        }
+
+        // Close menu when clicking/touching outside
         document.addEventListener('click', () => {
             this.menuDropdown.classList.remove('show');
+        });
+        document.addEventListener('touchstart', (e) => {
+            if (!this.menuBtn.contains(e.target) && !this.menuDropdown.contains(e.target)) {
+                this.menuDropdown.classList.remove('show');
+            }
         });
 
         // Load saved data
