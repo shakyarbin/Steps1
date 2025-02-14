@@ -81,6 +81,17 @@ class StepTracker {
         
         // Load saved data
         this.loadSavedData();
+
+        // Initialize bots
+        this.bots = [
+            { element: document.querySelector('.bot1'), progress: 0, speed: 0.001 },
+            { element: document.querySelector('.bot2'), progress: 0, speed: 0.0015 },
+            { element: document.querySelector('.bot3'), progress: 0, speed: 0.0008 }
+        ];
+        
+        // Initialize bot positions
+        this.resetBotPositions();
+        this.isBotsMoving = false;
     }
 
     initializeChart() {
@@ -205,6 +216,11 @@ class StepTracker {
         this.startBtn.textContent = 'STOP';
         this.startBtn.style.backgroundColor = '#FF453A';
         this.startBtn.classList.add('active');
+        // Start bot animation when tracking starts
+        this.isBotsMoving = true;
+        if (!this.animationFrame) {
+            this.animateBots();
+        }
     }
 
     stopTracking() {
@@ -213,6 +229,12 @@ class StepTracker {
         this.startBtn.textContent = 'START';
         this.startBtn.style.backgroundColor = '#32d74b';
         this.startBtn.classList.remove('active');
+        // Stop bot animation when tracking stops
+        this.isBotsMoving = false;
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
+        }
     }
 
     handleMotion(event) {
@@ -334,13 +356,20 @@ class StepTracker {
     resetSteps() {
         if (confirm('Are you sure you want to reset your steps to zero?')) {
             this.steps = 0;
-            // Only reset step counter data
             localStorage.setItem('stepCounterData', JSON.stringify({
                 steps: 0,
                 lastUpdated: Date.now()
             }));
             this.updateDisplays();
             this.menuDropdown.classList.remove('show');
+            // Reset bot positions when steps are reset
+            this.resetBotPositions();
+            // Stop bots if they were moving
+            this.isBotsMoving = false;
+            if (this.animationFrame) {
+                cancelAnimationFrame(this.animationFrame);
+                this.animationFrame = null;
+            }
             this.showFeedback('Steps reset successfully');
         }
     }
@@ -359,6 +388,57 @@ class StepTracker {
             feedback.classList.remove('show');
             setTimeout(() => feedback.remove(), 300);
         }, 2000);
+    }
+
+    resetBotPositions() {
+        const progress = document.querySelector('.progress');
+        if (!progress) return;
+        
+        this.bots.forEach(bot => {
+            bot.progress = 0;
+            const point = progress.getPointAtLength(0);
+            bot.element.style.left = `${point.x}px`;
+            bot.element.style.top = `${point.y}px`;
+            bot.element.style.transform = 'translate(-50%, -50%)';
+            bot.speed = Math.random() * 0.001 + 0.0005; // Random speed between 0.0005 and 0.0015
+        });
+    }
+
+    animateBots() {
+        const progress = document.querySelector('.progress');
+        if (!progress) return;
+        
+        const pathLength = progress.getTotalLength();
+        
+        const updateBot = (bot) => {
+            if (!this.isBotsMoving) return;
+            bot.progress += bot.speed * (Math.random() * 0.5 + 0.75); // Random speed variation
+            if (bot.progress >= 1) bot.progress = 0;
+            
+            const point = progress.getPointAtLength(pathLength * bot.progress);
+            bot.element.style.left = `${point.x}px`;
+            bot.element.style.top = `${point.y}px`;
+            
+            // Calculate rotation based on path direction
+            const nextPoint = progress.getPointAtLength(Math.min(pathLength * (bot.progress + 0.01), pathLength));
+            const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * 180 / Math.PI;
+            bot.element.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            
+            // Check if bot passes the player
+            const playerProgress = 1 - (progress.style.strokeDashoffset.replace('px', '') / pathLength);
+            if (Math.abs(bot.progress - playerProgress) < 0.02) {
+                bot.element.classList.add('passing');
+                setTimeout(() => bot.element.classList.remove('passing'), 500);
+            }
+        };
+        
+        // Update bot positions
+        const animate = () => {
+            this.bots.forEach(updateBot);
+            this.animationFrame = requestAnimationFrame(animate);
+        };
+        
+        animate();
     }
 }
 
