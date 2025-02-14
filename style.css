@@ -1510,25 +1510,3 @@ body {
         width: 95%;
     }
 }
-
-@keyframes rewardPopup {
-    0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
-    50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
-}
-
-.reward-icon {
-    position: absolute;
-    top: 50%;
-    right: 40px;
-    font-size: 32px;
-    color: #FFD700;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 3;
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
-}
-
-.reward-icon.show {
-    animation: rewardPopup 1s ease forwards;
-}
