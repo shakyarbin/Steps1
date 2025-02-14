@@ -13,6 +13,12 @@ class StepTracker {
         this.timeDisplay = document.getElementById('timeValue');
         this.startBtn = document.getElementById('startBtn');
 
+        // Add menu functionality
+        this.menuBtn = document.querySelector('.menu-btn');
+        this.menuDropdown = document.querySelector('.menu-dropdown');
+        this.resetBtn = document.getElementById('resetBtn');
+        this.deleteBtn = document.getElementById('deleteBtn');
+
         // Bind methods
         this.handleMotion = this.handleMotion.bind(this);
         this.toggleTracking = this.toggleTracking.bind(this);
@@ -22,6 +28,21 @@ class StepTracker {
             this.startBtn.addEventListener('touchstart', this.toggleTracking);
             this.startBtn.addEventListener('click', this.toggleTracking);
         }
+
+        // Add menu event listeners
+        this.menuBtn.addEventListener('click', () => {
+            this.menuDropdown.classList.toggle('show');
+        });
+
+        this.resetBtn.addEventListener('click', () => this.resetSteps());
+        this.deleteBtn.addEventListener('click', () => this.deleteSteps());
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.menuBtn.contains(e.target) && !this.menuDropdown.contains(e.target)) {
+                this.menuDropdown.classList.remove('show');
+            }
+        });
 
         // Load saved data
         this.loadSavedData();
@@ -129,6 +150,23 @@ class StepTracker {
             steps: this.steps,
             lastUpdated: Date.now()
         }));
+    }
+
+    resetSteps() {
+        if (confirm('Are you sure you want to reset your steps?')) {
+            this.steps = 0;
+            this.updateDisplays();
+            this.menuDropdown.classList.remove('show');
+        }
+    }
+
+    deleteSteps() {
+        if (confirm('Are you sure you want to delete all steps? This cannot be undone.')) {
+            this.steps = 0;
+            localStorage.removeItem('stepCounterData');
+            this.updateDisplays();
+            this.menuDropdown.classList.remove('show');
+        }
     }
 }
 
