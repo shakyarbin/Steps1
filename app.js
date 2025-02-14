@@ -22,6 +22,8 @@ class StepTracker {
         // Bind methods
         this.handleMotion = this.handleMotion.bind(this);
         this.toggleTracking = this.toggleTracking.bind(this);
+        this.resetSteps = this.resetSteps.bind(this);
+        this.deleteSteps = this.deleteSteps.bind(this);
 
         // Add event listeners
         if (this.startBtn) {
@@ -43,28 +45,12 @@ class StepTracker {
             });
         }
 
+        // Add reset and delete button listeners
         if (this.resetBtn) {
-            this.resetBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.resetSteps();
-            });
-            // Add touch event for mobile
-            this.resetBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                this.resetSteps();
-            });
+            this.resetBtn.addEventListener('click', this.resetSteps);
         }
-
         if (this.deleteBtn) {
-            this.deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.deleteSteps();
-            });
-            // Add touch event for mobile
-            this.deleteBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                this.deleteSteps();
-            });
+            this.deleteBtn.addEventListener('click', this.deleteSteps);
         }
 
         // Close menu when clicking/touching outside

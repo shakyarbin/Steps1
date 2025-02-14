@@ -213,11 +213,15 @@ body {
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     margin-top: 8px;
+    transform: translateY(10px);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
 }
 
 .menu-dropdown.show {
     display: block;
-    animation: menuShow 0.2s ease forwards;
+    transform: translateY(0);
+    opacity: 1;
 }
 
 .menu-item {
