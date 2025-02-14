@@ -30,18 +30,24 @@ class StepTracker {
         }
 
         // Add menu event listeners
-        this.menuBtn.addEventListener('click', () => {
+        this.menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             this.menuDropdown.classList.toggle('show');
         });
 
-        this.resetBtn.addEventListener('click', () => this.resetSteps());
-        this.deleteBtn.addEventListener('click', () => this.deleteSteps());
+        this.resetBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.resetSteps();
+        });
+        
+        this.deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.deleteSteps();
+        });
 
         // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!this.menuBtn.contains(e.target) && !this.menuDropdown.contains(e.target)) {
-                this.menuDropdown.classList.remove('show');
-            }
+        document.addEventListener('click', () => {
+            this.menuDropdown.classList.remove('show');
         });
 
         // Load saved data
@@ -137,6 +143,14 @@ class StepTracker {
         progressLine.style.width = `${progress * 100}%`;
         progressDot.style.left = `${progress * 100}%`;
         
+        // Calculate dot position along the curved path
+        const y = Math.sin(progress * Math.PI * 2) * 15;
+        progressDot.style.top = `calc(50% + ${y}px)`;
+        
+        // Calculate rotation angle based on position
+        const angle = Math.cos(progress * Math.PI * 2) * 30;
+        progressDot.style.setProperty('--rotate', `${angle}deg`);
+        
         if (progress >= 1) {
             progressDot.classList.add('complete');
             document.querySelector('.flag')?.style.setProperty('animation', 'wave 1s infinite');
@@ -153,10 +167,11 @@ class StepTracker {
     }
 
     resetSteps() {
-        if (confirm('Are you sure you want to reset your steps?')) {
+        if (confirm('Are you sure you want to reset your steps to zero?')) {
             this.steps = 0;
             this.updateDisplays();
             this.menuDropdown.classList.remove('show');
+            this.showFeedback('Steps reset successfully');
         }
     }
 
@@ -166,7 +181,24 @@ class StepTracker {
             localStorage.removeItem('stepCounterData');
             this.updateDisplays();
             this.menuDropdown.classList.remove('show');
+            this.showFeedback('All data deleted successfully');
         }
+    }
+
+    showFeedback(message) {
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback-toast';
+        feedback.textContent = message;
+        document.body.appendChild(feedback);
+        
+        // Trigger animation
+        setTimeout(() => feedback.classList.add('show'), 10);
+        
+        // Remove after animation
+        setTimeout(() => {
+            feedback.classList.remove('show');
+            setTimeout(() => feedback.remove(), 300);
+        }, 2000);
     }
 }
 

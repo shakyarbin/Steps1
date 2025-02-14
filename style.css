@@ -183,7 +183,7 @@ body {
     background-color: #2c2c2e;
     border-radius: 12px;
     padding: 8px;
-    min-width: 150px;
+    min-width: 180px;
     display: none;
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -206,19 +206,44 @@ body {
     text-align: left;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.menu-item#deleteBtn {
-    color: #ff453a;
+.menu-item i {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
 }
 
 .menu-item#resetBtn {
     color: #ff9f0a;
 }
 
+.menu-item#deleteBtn {
+    color: #ff453a;
+}
+
+.menu-item:active {
+    transform: scale(0.98);
+}
+
 .menu-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Add animation for menu */
+@keyframes menuShow {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Mobile responsive styles */
@@ -257,8 +282,8 @@ body {
     }
     
     .map-wrapper {
-        height: 100px;
-        margin: 15px 0;
+        height: 180px;
+        padding: 15px;
     }
     
     #startBtn {
@@ -793,7 +818,7 @@ body {
     border-radius: 15px;
     padding: 20px;
     position: relative;
-    height: 200px;
+    height: 250px;
     overflow: hidden;
 }
 
@@ -817,7 +842,7 @@ body {
         linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
     background-size: 30px 30px;
-    animation: moveGrid 20s linear infinite;
+    animation: moveGrid 15s linear infinite;
 }
 
 @keyframes moveGrid {
@@ -841,7 +866,8 @@ body {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 4px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    transform: scale(0.98);
+    transform: scale(0.95);
+    clip-path: path('M0,25 C10,25 20,10 30,25 S50,40 70,25 S90,10 100,25');
 }
 
 .progress-line {
@@ -865,8 +891,8 @@ body {
     border-radius: 50%;
     top: 50%;
     left: 0%;
-    transform: translate(-50%, -50%);
-    transition: left 0.3s ease;
+    transform: translate(-50%, -50%) rotate(var(--rotate, 0deg));
+    transition: all 0.3s ease;
     box-shadow: 0 0 15px rgba(255, 45, 85, 0.7);
     z-index: 2;
 }
@@ -898,8 +924,12 @@ body {
 /* Mobile responsive styles */
 @media (max-width: 600px) {
     .map-wrapper {
-        height: 120px;
+        height: 180px;
         padding: 15px;
+    }
+
+    .progress-path {
+        transform: scale(0.92);
     }
 
     .progress-dot {
@@ -909,7 +939,7 @@ body {
 
     .start-label, .end-label {
         font-size: 12px;
-        top: -20px;
+        top: -25px;
     }
 
     .flag {
@@ -933,4 +963,25 @@ body {
 .progress-dot.complete {
     background: #32d74b;
     animation: complete 0.5s ease;
+}
+
+.feedback-toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background-color: #2c2c2e;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 2000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
 } 
