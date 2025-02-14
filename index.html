@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step Counter</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+    <div class="container">
+        <div class="stats-card">
+            <div class="header">
+                <span>Home</span>
+                <div class="menu-container">
+                    <button class="menu-btn">⋮</button>
+                    <div class="menu-dropdown">
+                        <button class="menu-item" id="deleteBtn">Delete Steps</button>
+                        <button class="menu-item" id="resetBtn">Reset Steps</button>
+                    </div>
+                </div>
+            </div>
+            <div class="step-circle">
+                <div class="step-count">
+                    <span id="stepCount">0</span>
+                    <small>Total steps</small>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <span class="value" id="distanceValue">0</span>
+                    <span class="label">km</span>
+                </div>
+                <div class="metric">
+                    <span class="value" id="caloriesValue">0</span>
+                    <span class="label">kcal</span>
+                </div>
+                <div class="metric">
+                    <span class="value" id="timeValue">0</span>
+                    <span class="label">min</span>
+                </div>
+            </div>
+            <div class="map-wrapper">
+                <div class="map-background">
+                    <div class="grid-lines"></div>
+                </div>
+                <div class="map-container">
+                    <div class="progress-path">
+                        <div class="progress-line"></div>
+                        <div class="progress-dot"></div>
+                    </div>
+                    <div class="start-label">START</div>
+                    <div class="end-label">
+                        <span>FINISH</span>
+                        <span class="flag">🚩</span>
+                    </div>
+                </div>
+            </div>
+            <button id="startBtn">START</button>
+        </div>
+        
+        <div class="nav-bar">
+            <button class="nav-btn active">
+                <span class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </span>
+                Home
+            </button>
+            <button class="nav-btn" onclick="window.location.href='report.html'">
+                <span class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </span>
+                Report
+            </button>
+        </div>
+    </div>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered');
+                        // Request background sync permission
+                        if ('periodicSync' in registration) {
+                            registration.periodicSync.register('sync-steps', {
+                                minInterval: 60000 // Sync every minute
+                            });
+                        }
+                    })
+                    .catch(err => console.log('ServiceWorker registration failed:', err));
+            });
+        }
+
+        // Handle background sync messages
+        navigator.serviceWorker.addEventListener('message', event => {
+            if (event.data.type === 'sync-steps') {
+                window.stepTracker.loadSavedData();
+            }
+        });
+
+        class StepTracker {
+            constructor() {
+                this.steps = 0;
+                this.lastZ = null;
+                this.moving = false;
+                this.lastStepTime = 0;
+                this.isTracking = false;
+
+                // Load saved data
+                this.loadSavedData();
+
+                // Get DOM elements
+                this.stepCountDisplay = document.getElementById('stepCount');
+                this.distanceDisplay = document.getElementById('distanceValue');
+                this.caloriesDisplay = document.getElementById('caloriesValue');
+                this.timeDisplay = document.getElementById('timeValue');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.deleteBtn = document.getElementById('deleteBtn');
+                this.startBtn = document.getElementById('startBtn');
+
+                // Bind methods
+                this.handleMotion = this.handleMotion.bind(this);
+                this.resetSteps = this.resetSteps.bind(this);
+                this.deleteSteps = this.deleteSteps.bind(this);
+                this.toggleTracking = this.toggleTracking.bind(this);
+                this.saveData = this.saveData.bind(this);
+
+                // Add event listeners
+                this.resetBtn.addEventListener('click', this.resetSteps);
+                this.deleteBtn.addEventListener('click', this.deleteSteps);
+                if (this.startBtn) {
+                    this.startBtn.addEventListener('click', () => {
+                        this.toggleTracking().catch(error => {
+                            console.error('Tracking error:', error);
+                            alert('Please ensure you have granted motion permissions and are using a mobile device.');
+                        });
+                    });
+                }
+
+                // Add visibility change listener
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'hidden') {
+                        this.saveData();
+                    }
+                });
+
+                // Save data periodically
+                setInterval(this.saveData, 5000);
+            }
+
+            loadSavedData() {
+                const savedData = localStorage.getItem('stepCounterData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    this.steps = data.steps || 0;
+                    this.isTracking = data.isTracking || false;
+                    
+                    // Update UI based on tracking state
+                    if (this.isTracking) {
+                        this.startBtn.textContent = 'STOP';
+                        this.startBtn.style.backgroundColor = '#FF453A';
+                    }
+                }
+            }
+
+            saveData() {
+                const data = {
+                    steps: this.steps,
+                    isTracking: this.isTracking,
+                    lastUpdated: Date.now()
+                };
+                localStorage.setItem('stepCounterData', JSON.stringify(data));
+            }
+
+            async toggleTracking() {
+                if (!this.isTracking) {
+                    try {
+                        if (!window.DeviceMotionEvent) {
+                            throw new Error('Device motion not supported on this device');
+                        }
+                        await this.initializeStepTracking();
+                        this.startBtn.textContent = 'STOP';
+                        this.startBtn.style.backgroundColor = '#FF453A';
+                        this.saveData();
+                    } catch (error) {
+                        console.error('Failed to start tracking:', error);
+                        this.isTracking = false;
+                        this.startBtn.textContent = 'START';
+                        this.startBtn.style.backgroundColor = '#FF9500';
+                        throw error;
+                    }
+                } else {
+                    this.stopTracking();
+                    this.startBtn.textContent = 'START';
+                    this.startBtn.style.backgroundColor = '#FF9500';
+                    this.saveData();
+                }
+            }
+
+            stopTracking() {
+                if (this.isTracking) {
+                    window.removeEventListener('devicemotion', this.handleMotion);
+                    this.isTracking = false;
+                }
+            }
+
+            async initializeStepTracking() {
+                if (typeof window !== "undefined" && "DeviceMotionEvent" in window) {
+                    try {
+                        if (typeof DeviceMotionEvent.requestPermission === "function") {
+                            // iOS requires permission
+                            const permission = await DeviceMotionEvent.requestPermission();
+                            if (permission === 'granted') {
+                                window.addEventListener('devicemotion', this.handleMotion);
+                                this.isTracking = true;
+                            } else {
+                                throw new Error('Motion permission denied');
+                            }
+                        } else {
+                            // Non-iOS devices
+                            window.addEventListener('devicemotion', this.handleMotion);
+                            this.isTracking = true;
+                        }
+                    } catch (error) {
+                        this.isTracking = false;
+                        throw error;
+                    }
+                } else {
+                    throw new Error('Device motion not supported');
+                }
+            }
+
+            handleMotion(event) {
+                if (!this.isTracking) return;
+
+                const z = event.accelerationIncludingGravity.z;
+                const currentTime = Date.now();
+
+                if (z !== null) {
+                    if (this.lastZ !== null) {
+                        const deltaZ = Math.abs(z - this.lastZ);
+                        if (deltaZ > 1.5 && currentTime - this.lastStepTime >= 250) {
+                            if (!this.moving) {
+                                this.steps++;
+                                this.lastStepTime = currentTime;
+                                this.moving = true;
+                                this.updateDisplays();
+                            }
+                        } else if (deltaZ < 0.8) {
+                            this.moving = false;
+                        }
+                    }
+                    this.lastZ = z;
+                }
+            }
+
+            updateDisplays() {
+                // Update step count
+                this.stepCountDisplay.textContent = this.steps;
+
+                // Update distance (km)
+                const distance = (this.steps * 0.0007).toFixed(2);
+                this.distanceDisplay.textContent = distance;
+
+                // Update calories
+                const calories = Math.round(this.steps * 0.04);
+                this.caloriesDisplay.textContent = calories;
+
+                // Update time
+                const minutes = Math.round(this.steps / 100);
+                this.timeDisplay.textContent = minutes;
+
+                // Update progress
+                this.updateProgress();
+
+                // Save data
+                this.saveData();
+            }
+
+            updateProgress() {
+                const progressLine = document.querySelector('.progress-line');
+                const progressDot = document.querySelector('.progress-dot');
+                const totalStepsToFinish = 100; // Adjust this value as needed
+                const progress = Math.min(this.steps / totalStepsToFinish, 1);
+                
+                // Update progress line width
+                progressLine.style.width = `${progress * 100}%`;
+                
+                // Update dot position
+                progressDot.style.left = `${progress * 100}%`;
+                
+                // Add completion effect
+                if (progress >= 1) {
+                    progressDot.classList.add('complete');
+                    const flag = document.querySelector('.flag');
+                    if (flag) {
+                        flag.style.animation = 'wave 1s infinite';
+                    }
+                } else {
+                    progressDot.classList.remove('complete');
+                }
+            }
+
+            updateHourlySteps() {
+                const hourlySteps = JSON.parse(localStorage.getItem('hourlySteps') || '[]');
+                const now = new Date();
+                const currentHour = now.getHours();
+                
+                // Find or create entry for current hour
+                let hourEntry = hourlySteps.find(entry => 
+                    new Date(entry.timestamp).getHours() === currentHour &&
+                    new Date(entry.timestamp).toDateString() === now.toDateString()
+                );
+                
+                if (hourEntry) {
+                    hourEntry.steps++;
+                } else {
+                    hourlySteps.push({
+                        timestamp: now.getTime(),
+                        steps: 1
+                    });
+                }
+                
+                // Keep only last 24 hours of data
+                const dayAgo = now.getTime() - (24 * 60 * 60 * 1000);
+                const filteredSteps = hourlySteps.filter(entry => entry.timestamp > dayAgo);
+                
+                localStorage.setItem('hourlySteps', JSON.stringify(filteredSteps));
+            }
+
+            resetSteps() {
+                this.steps = 0;
+                this.lastStepTime = 0;
+                this.updateDisplays();
+            }
+
+            deleteSteps() {
+                if (confirm('Are you sure you want to delete all steps? This cannot be undone.')) {
+                    this.steps = 0;
+                    this.lastStepTime = 0;
+                    this.updateDisplays();
+                    
+                    // Close menu dropdown
+                    document.querySelector('.menu-dropdown').classList.remove('show');
+                }
+            }
+        }
+
+        // Initialize the step tracker when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.stepTracker = new StepTracker();
+        });
+    </script>
+</body>
+</html> 

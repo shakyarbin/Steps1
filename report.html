@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step Counter - Report</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Activity Rings -->
+        <div class="activity-rings-card">
+            <div class="ring-stats">
+                <div class="ring-stat">
+                    <i class="fas fa-fire-flame-curved stat-icon move"></i>
+                    <span class="label">Move</span>
+                    <span class="value" id="moveValue">479/800</span>
+                    <span class="unit">CAL</span>
+                </div>
+                <div class="ring-stat">
+                    <i class="fas fa-person-running stat-icon exercise"></i>
+                    <span class="label">Exercise</span>
+                    <span class="value" id="exerciseValue">50/30</span>
+                    <span class="unit">MIN</span>
+                </div>
+                <div class="ring-stat">
+                    <i class="fas fa-person-walking stat-icon stand"></i>
+                    <span class="label">Stand</span>
+                    <span class="value" id="standValue">3/12</span>
+                    <span class="unit">HRS</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Metrics -->
+        <div class="health-metrics">
+            <div class="health-card pulse">
+                <i class="fas fa-heartbeat metric-icon pulse-animation"></i>
+                <div class="metric-info">
+                    <span class="metric-label">Heart Rate</span>
+                    <span class="metric-value">Connect fitbit</span>
+                    <span class="metric-unit">BPM</span>
+                </div>
+            </div>
+            <div class="health-card oxygen">
+                <i class="fas fa-lungs metric-icon breath-animation"></i>
+                <div class="metric-info">
+                    <span class="metric-label">Blood Oxygen</span>
+                    <span class="metric-value">Connect fitbit</span>
+                    <span class="metric-unit">%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step Stats -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <i class="fas fa-shoe-prints stat-icon"></i>
+                <span class="stat-label">Step Count</span>
+                <span class="stat-value" id="stepCount">0</span>
+                <span class="stat-arrow">›</span>
+            </div>
+            <div class="stat-box">
+                <i class="fas fa-route stat-icon"></i>
+                <span class="stat-label">Step Distance</span>
+                <span class="stat-value" id="stepDistance">0</span>
+                <span class="stat-unit">km</span>
+                <span class="stat-arrow">›</span>
+            </div>
+        </div>
+
+        <!-- Hourly Steps Chart -->
+        <div class="chart-card">
+            <div class="chart-header">Steps per Hour</div>
+            <div class="chart-container">
+                <canvas id="hourlyStepsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Trends -->
+        <div class="trends-card">
+            <span class="trends-label">
+                <i class="fas fa-chart-line"></i>
+                Trends
+            </span>
+            <div class="trends-grid">
+                <div class="trend-item">
+                    <div class="trend-icon up">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="trend-info">
+                        <span class="trend-label">Stand</span>
+                        <span class="trend-value">12HR/DAY</span>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-icon up">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="trend-info">
+                        <span class="trend-label">Exercise</span>
+                        <span class="trend-value">4MIN/DAY</span>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-icon down">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="trend-info">
+                        <span class="trend-label">Distance</span>
+                        <span class="trend-value">0.1MI/DAY</span>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-icon up">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="trend-info">
+                        <span class="trend-label">Walking Pace</span>
+                        <span class="trend-value">40.0MIN/MI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-bar">
+            <button class="nav-btn" onclick="window.location.href='index.html'">
+                <span class="icon">
+                    <i class="fas fa-home"></i>
+                </span>
+                Home
+            </button>
+            <button class="nav-btn active">
+                <span class="icon">
+                    <i class="fas fa-chart-bar"></i>
+                </span>
+                Report
+            </button>
+        </div>
+    </div>
+    <script src="report.js"></script>
+</body>
+</html> 
