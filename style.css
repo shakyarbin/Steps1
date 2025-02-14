@@ -119,10 +119,14 @@ body {
     font-size: 14px;
 }
 
-#startBtn {
-    width: 100%;
+.button-group {
+    display: flex;
+    gap: 10px;
     margin-top: 20px;
-    background-color: #FF9500;
+}
+
+.reset-btn {
+    background-color: #FF453A;
     color: white;
     border: none;
     padding: 12px 40px;
@@ -130,11 +134,38 @@ body {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.reset-btn:hover {
+    background-color: #FF5F5F;
+}
+
+#startBtn {
+    flex: 1;
+    margin-top: 0;
+    background-color: #32d74b;
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 #startBtn:hover {
-    background-color: #FF9F0A;
+    background-color: #41e05c;
+}
+
+#startBtn.active {
+    background-color: #FF453A;
+}
+
+#startBtn.active:hover {
+    background-color: #FF5F5F;
 }
 
 .nav-bar {
@@ -1157,4 +1188,4 @@ body {
     .flag {
         font-size: 14px;
     }
-} 
+}

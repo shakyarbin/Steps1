@@ -12,6 +12,7 @@ class StepTracker {
         this.caloriesDisplay = document.getElementById('caloriesValue');
         this.timeDisplay = document.getElementById('timeValue');
         this.startBtn = document.getElementById('startBtn');
+        this.resetBtnOutside = document.getElementById('resetBtnOutside');
 
         // Add menu functionality
         this.menuBtn = document.querySelector('.menu-btn');
@@ -47,7 +48,10 @@ class StepTracker {
 
         // Add reset and delete button listeners
         if (this.resetBtn) {
-            this.resetBtn.addEventListener('click', this.resetSteps);
+            this.resetBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.resetSteps();
+            });
         }
         if (this.deleteBtn) {
             this.deleteBtn.addEventListener('click', this.deleteSteps);
@@ -62,6 +66,15 @@ class StepTracker {
                 this.menuDropdown.classList.remove('show');
             }
         });
+
+        // Add outside reset button listener
+        if (this.resetBtnOutside) {
+            this.resetBtnOutside.addEventListener('click', this.resetSteps);
+            this.resetBtnOutside.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+            this.resetSteps();
+        });
+    }
 
         // Load saved data
         this.loadSavedData();
@@ -111,8 +124,8 @@ class StepTracker {
     stopTracking() {
         window.removeEventListener('devicemotion', this.handleMotion);
         this.isTracking = false;
-        this.startBtn.textContent = 'START';
-        this.startBtn.style.backgroundColor = '#FF9500';
+            this.startBtn.textContent = 'START';
+            this.startBtn.style.backgroundColor = '#FF9500';
     }
 
     handleMotion(event) {
@@ -184,15 +197,6 @@ class StepTracker {
         }));
     }
 
-    resetSteps() {
-        if (confirm('Are you sure you want to reset your steps to zero?')) {
-            this.steps = 0;
-            this.updateDisplays();
-            this.menuDropdown.classList.remove('show');
-            this.showFeedback('Steps reset successfully');
-        }
-    }
-
     deleteSteps() {
         if (confirm('Are you sure you want to delete all steps? This cannot be undone.')) {
             this.steps = 0;
@@ -200,6 +204,15 @@ class StepTracker {
             this.updateDisplays();
             this.menuDropdown.classList.remove('show');
             this.showFeedback('All data deleted successfully');
+        }
+    }
+
+    resetSteps() {
+        if (confirm('Are you sure you want to reset your steps to zero?')) {
+            this.steps = 0;
+            this.updateDisplays();
+            this.menuDropdown.classList.remove('show');
+            this.showFeedback('Steps reset successfully');
         }
     }
 
