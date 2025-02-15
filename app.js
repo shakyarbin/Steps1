@@ -82,11 +82,11 @@ class StepTracker {
         // Load saved data
         this.loadSavedData();
 
-        // Initialize bots with proper selectors and slower speeds
+        // Initialize bots with slightly faster speeds
         this.bots = [
             { element: document.querySelector('.bot-dot.bot1'), progress: 0, speed: 0.0003 },
-            { element: document.querySelector('.bot-dot.bot2'), progress: 0, speed: 0.0004 },
-            { element: document.querySelector('.bot-dot.bot3'), progress: 0, speed: 0.0005 }
+            { element: document.querySelector('.bot-dot.bot2'), progress: 0, speed: 0.00035 },
+            { element: document.querySelector('.bot-dot.bot3'), progress: 0, speed: 0.0004 }
         ];
         
         // Initialize bot positions but don't start animation
@@ -468,8 +468,8 @@ class StepTracker {
             // Reset any visual states
             bot.element.classList.remove('passing');
             
-            // Assign different but slower speeds to each bot
-            bot.speed = 0.0002 + (index * 0.0001);
+            // Assign slightly faster speeds to each bot
+            bot.speed = 0.00025 + (index * 0.00005);
         });
     }
 
