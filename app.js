@@ -82,16 +82,20 @@ class StepTracker {
         // Load saved data
         this.loadSavedData();
 
-        // Initialize bots
+        // Initialize bots with proper selectors and slower speeds
         this.bots = [
-            { element: document.querySelector('.bot1'), progress: 0, speed: 0.001 },
-            { element: document.querySelector('.bot2'), progress: 0, speed: 0.0015 },
-            { element: document.querySelector('.bot3'), progress: 0, speed: 0.0008 }
+            { element: document.querySelector('.bot-dot.bot1'), progress: 0, speed: 0.0003 },
+            { element: document.querySelector('.bot-dot.bot2'), progress: 0, speed: 0.0004 },
+            { element: document.querySelector('.bot-dot.bot3'), progress: 0, speed: 0.0005 }
         ];
         
-        // Initialize bot positions
-        this.resetBotPositions();
+        // Initialize bot positions but don't start animation
         this.isBotsMoving = false;
+        this.resetBotPositions();
+
+        // Add race tracking
+        this.raceResults = [];
+        this.raceStartTime = Date.now();
     }
 
     initializeChart() {
@@ -216,8 +220,10 @@ class StepTracker {
         this.startBtn.textContent = 'STOP';
         this.startBtn.style.backgroundColor = '#FF453A';
         this.startBtn.classList.add('active');
+        
         // Start bot animation when tracking starts
         this.isBotsMoving = true;
+        this.raceStartTime = Date.now();
         if (!this.animationFrame) {
             this.animateBots();
         }
@@ -229,6 +235,7 @@ class StepTracker {
         this.startBtn.textContent = 'START';
         this.startBtn.style.backgroundColor = '#32d74b';
         this.startBtn.classList.remove('active');
+        
         // Stop bot animation when tracking stops
         this.isBotsMoving = false;
         if (this.animationFrame) {
@@ -309,30 +316,40 @@ class StepTracker {
     updateProgress() {
         const progress = document.querySelector('.progress');
         const trackDot = document.querySelector('.track-dot');
-        const totalStepsToFinish = 100;
+        const track = document.querySelector('.track');
+        if (!progress || !trackDot || !track) return;
+        
+        const totalStepsToFinish = 100; // Decreased from 1000 to 300 steps
         const progressValue = Math.min(this.steps / totalStepsToFinish, 1);
         
-        // Update progress path
-        const pathLength = progress.getTotalLength();
-        progress.style.strokeDashoffset = pathLength - (pathLength * progressValue);
+        // Get the total length of the path
+        const pathLength = track.getTotalLength();
+        
+        // Update progress path dashoffset
+        progress.style.strokeDasharray = pathLength;
+        progress.style.strokeDashoffset = pathLength * (1 - progressValue);
+        
+        // Get point on path for current progress
+        const point = track.getPointAtLength(pathLength * progressValue);
         
         // Update dot position
-        const point = progress.getPointAtLength(pathLength * progressValue);
         trackDot.style.left = `${point.x}px`;
         trackDot.style.top = `${point.y}px`;
         
-        // Calculate dot rotation
-        if (progressValue < 1) {
-            const nextPoint = progress.getPointAtLength(Math.min(pathLength * progressValue + 1, pathLength));
-            const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * 180 / Math.PI;
-            trackDot.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-        }
+        // Calculate rotation for smooth transitions
+        const nextPoint = track.getPointAtLength(Math.min(pathLength * (progressValue + 0.01), pathLength));
+        const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * 180 / Math.PI;
+        trackDot.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
         
+        // Add completion effects
         if (progressValue >= 1) {
             trackDot.classList.add('complete');
-            document.querySelector('.flag')?.style.setProperty('animation', 'wave 1s infinite');
+            const flag = document.querySelector('.flag');
+            if (flag) flag.style.animation = 'wave 1s infinite';
         } else {
             trackDot.classList.remove('complete');
+            const flag = document.querySelector('.flag');
+            if (flag) flag.style.animation = 'none';
         }
     }
 
@@ -355,21 +372,59 @@ class StepTracker {
 
     resetSteps() {
         if (confirm('Are you sure you want to reset your steps to zero?')) {
+            // Reset steps and storage
             this.steps = 0;
             localStorage.setItem('stepCounterData', JSON.stringify({
                 steps: 0,
                 lastUpdated: Date.now()
             }));
-            this.updateDisplays();
-            this.menuDropdown.classList.remove('show');
-            // Reset bot positions when steps are reset
+            
+            // Reset progress and player dot position
+            const progress = document.querySelector('.progress');
+            const trackDot = document.querySelector('.track-dot');
+            const track = document.querySelector('.track');
+            
+            if (progress && trackDot && track) {
+                // Reset progress path
+                progress.style.strokeDasharray = track.getTotalLength();
+                progress.style.strokeDashoffset = track.getTotalLength();
+                
+                // Reset player dot to start position
+                const startPoint = track.getPointAtLength(0);
+                trackDot.style.left = `${startPoint.x}px`;
+                trackDot.style.top = `${startPoint.y}px`;
+                trackDot.style.transform = 'translate(-50%, -50%)';
+                trackDot.classList.remove('complete');
+                
+                // Reset finish flag animation
+                const flag = document.querySelector('.flag');
+                if (flag) flag.style.animation = 'none';
+            }
+            
+            // Reset bot positions
             this.resetBotPositions();
+            
+            // Reset race tracking
+            this.raceResults = [];
+            this.raceStartTime = Date.now();
+            
             // Stop bots if they were moving
             this.isBotsMoving = false;
             if (this.animationFrame) {
                 cancelAnimationFrame(this.animationFrame);
                 this.animationFrame = null;
             }
+            
+            // Reset leaderboard
+            const leaderboardItems = document.querySelectorAll('.leaderboard-item');
+            leaderboardItems.forEach(item => {
+                item.classList.remove('finished', 'current');
+                item.querySelector('.time').textContent = '--:--';
+            });
+            
+            // Update displays
+            this.updateDisplays();
+            this.menuDropdown.classList.remove('show');
             this.showFeedback('Steps reset successfully');
         }
     }
@@ -391,54 +446,137 @@ class StepTracker {
     }
 
     resetBotPositions() {
-        const progress = document.querySelector('.progress');
-        if (!progress) return;
+        const track = document.querySelector('.track');
+        if (!track) return;
         
-        this.bots.forEach(bot => {
+        // Cancel existing animation frame if it exists
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
+        }
+        
+        this.bots.forEach((bot, index) => {
+            if (!bot.element) return;
+            
+            // Reset progress and position
             bot.progress = 0;
-            const point = progress.getPointAtLength(0);
+            const point = track.getPointAtLength(0);
             bot.element.style.left = `${point.x}px`;
             bot.element.style.top = `${point.y}px`;
             bot.element.style.transform = 'translate(-50%, -50%)';
-            bot.speed = Math.random() * 0.001 + 0.0005; // Random speed between 0.0005 and 0.0015
+            
+            // Reset any visual states
+            bot.element.classList.remove('passing');
+            
+            // Assign different but slower speeds to each bot
+            bot.speed = 0.0002 + (index * 0.0001);
         });
     }
 
     animateBots() {
-        const progress = document.querySelector('.progress');
-        if (!progress) return;
+        const track = document.querySelector('.track');
+        if (!track) return;
         
-        const pathLength = progress.getTotalLength();
+        const pathLength = track.getTotalLength();
         
         const updateBot = (bot) => {
-            if (!this.isBotsMoving) return;
-            bot.progress += bot.speed * (Math.random() * 0.5 + 0.75); // Random speed variation
-            if (bot.progress >= 1) bot.progress = 0;
+            if (!bot.element) return;
             
-            const point = progress.getPointAtLength(pathLength * bot.progress);
+            // Only update progress if bot hasn't finished
+            if (!this.raceResults.includes(bot)) {
+                bot.progress += bot.speed;
+                
+                // Check for race completion
+                if (bot.progress >= 1) {
+                    bot.progress = 1; // Stop at finish line
+                    this.raceResults.push(bot);
+                    this.updateLeaderboard();
+                }
+            }
+            
+            // Get current point on path
+            const point = track.getPointAtLength(pathLength * bot.progress);
+            
+            // Update bot position
             bot.element.style.left = `${point.x}px`;
             bot.element.style.top = `${point.y}px`;
             
-            // Calculate rotation based on path direction
-            const nextPoint = progress.getPointAtLength(Math.min(pathLength * (bot.progress + 0.01), pathLength));
+            // Calculate rotation for smooth movement
+            const nextPoint = track.getPointAtLength(Math.min(pathLength * (bot.progress + 0.01), pathLength));
             const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * 180 / Math.PI;
             bot.element.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
             
-            // Check if bot passes the player
-            const playerProgress = 1 - (progress.style.strokeDashoffset.replace('px', '') / pathLength);
-            if (Math.abs(bot.progress - playerProgress) < 0.02) {
-                bot.element.classList.add('passing');
-                setTimeout(() => bot.element.classList.remove('passing'), 500);
+            // Check for player interaction
+            const trackDot = document.querySelector('.track-dot');
+            if (trackDot) {
+                const dotRect = trackDot.getBoundingClientRect();
+                const botRect = bot.element.getBoundingClientRect();
+                const distance = Math.hypot(
+                    dotRect.left - botRect.left,
+                    dotRect.top - botRect.top
+                );
+                
+                if (distance < 30 && !bot.element.classList.contains('passing')) {
+                    bot.element.classList.add('passing');
+                    setTimeout(() => bot.element.classList.remove('passing'), 500);
+                }
             }
         };
         
-        // Update bot positions
         const animate = () => {
-            this.bots.forEach(updateBot);
-            this.animationFrame = requestAnimationFrame(animate);
+            if (this.isBotsMoving) {
+                this.bots.forEach(updateBot);
+                this.animationFrame = requestAnimationFrame(animate);
+            }
         };
         
         animate();
+    }
+
+    updateLeaderboard() {
+        const leaderboardItems = document.querySelectorAll('.leaderboard-item');
+        const currentTime = ((Date.now() - this.raceStartTime) / 1000).toFixed(2);
+        
+        // Update finished bots
+        this.raceResults.forEach((bot, index) => {
+            const botNumber = bot.element.classList.contains('bot1') ? 1 :
+                             bot.element.classList.contains('bot2') ? 2 : 3;
+            const item = Array.from(leaderboardItems).find(item => 
+                item.querySelector(`.bot-indicator.bot${botNumber}`)
+            );
+            if (item) {
+                item.classList.add('finished');
+                item.querySelector('.time').textContent = `${currentTime}s`;
+            }
+        });
+        
+        // Update current positions for unfinished bots
+        const unfinishedBots = this.bots.filter(bot => !this.raceResults.includes(bot))
+            .sort((a, b) => b.progress - a.progress);
+        
+        unfinishedBots.forEach(bot => {
+            const botNumber = bot.element.classList.contains('bot1') ? 1 :
+                             bot.element.classList.contains('bot2') ? 2 : 3;
+            const item = Array.from(leaderboardItems).find(item => 
+                item.querySelector(`.bot-indicator.bot${botNumber}`)
+            );
+            if (item) {
+                item.classList.remove('current');
+                item.querySelector('.time').textContent = 'Racing...';
+            }
+        });
+        
+        // Update player position with new step count
+        const playerItem = Array.from(leaderboardItems).find(item => item.classList.contains('player'));
+        if (playerItem) {
+            const progressValue = this.steps / 300; // Updated to match new total steps
+            if (progressValue >= 1) {
+                playerItem.classList.add('finished');
+                playerItem.querySelector('.time').textContent = `${currentTime}s`;
+            } else {
+                playerItem.querySelector('.time').textContent = 'Racing...';
+            }
+        }
     }
 }
 
